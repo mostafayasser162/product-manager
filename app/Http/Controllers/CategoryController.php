@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Category;
+use App\Http\Requests\Category\StoreCategoryRequest;
+use App\Http\Requests\Category\UpdateCategoryRequest;
+use App\Http\Resources\CategoryResource;
 
 class CategoryController extends Controller
 {
@@ -11,54 +14,59 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::paginate();
+        $categories = CategoryResource::collection($categories);
+        return response()->paginate_resource($categories);
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        //
-    }
+        $data = $request->validated();
 
+        $category = Category::create($data);
+        $category = new CategoryResource($category);
+
+        return response()->success($category);
+    }
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
-    }
+        $category = Category::find($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        if (!$category) {
+            return response()->errors('Category not found');
+        }
+        $category = new CategoryResource($category);
+        return response()->success($category);
     }
-
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateCategoryRequest $request, Category $category)
     {
-        //
+        $data = $request->validated();
+
+        $category->update($data);
+
+        return response()->success(new CategoryResource($category));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+
+    public function destroy($id)
     {
-        //
+        $category = Category::find($id);
+        if (!$category) {
+            return response()->errors('Category not found');
+        }
+
+        $category->delete();
+        return response()->success('Category deleted successfully');
     }
 }

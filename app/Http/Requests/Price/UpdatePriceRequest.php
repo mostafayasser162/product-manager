@@ -11,7 +11,7 @@ class UpdatePriceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,9 @@ class UpdatePriceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'price'      => ['sometimes', 'numeric', 'min:1'],
+            'start_date' => ['sometimes', 'date'],
+            'end_date'   => ['sometimes', 'date', 'after_or_equal:start_date'],
         ];
     }
 }

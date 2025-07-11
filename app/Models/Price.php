@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Price extends Model
 {
-    use HasFactory;
+    use HasFactory , Traits\DynamicPerPage;
 
     protected $fillable = ['product_id', 'price', 'start_date', 'end_date'];
 

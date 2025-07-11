@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Product;
 
+use App\Rules\Rules;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProductRequest extends FormRequest
@@ -11,7 +12,7 @@ class UpdateProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +23,11 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name'         => ['sometimes', 'string', 'max:255'],
+            'image'        => ['sometimes', ...Rules::get('file.image')],
+            'description'  => ['sometimes', 'nullable', 'string'],
+            'category_ids' => ['sometimes', 'array'],
+            'category_ids.*' => ['exists:categories,id'],
         ];
     }
 }

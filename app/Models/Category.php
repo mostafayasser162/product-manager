@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Category extends Model
 {
-    use HasFactory;
+    use HasFactory , Traits\DynamicPerPage;
 
     protected $fillable = ['name'];
 

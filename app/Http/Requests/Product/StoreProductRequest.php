@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Product;
 
+use App\Rules\Rules;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProductRequest extends FormRequest
@@ -23,10 +24,10 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name'         => ['required', 'string', 'max:255'],
-            'image'        => ['nullable', 'url'],
-            'description'  => ['nullable', 'string'],
+            'image' => ['required', ...Rules::get('file.image')],
+            'description'  => ['required', 'string'],
             'category_ids' => ['array'],
-            'category_ids.*' => ['exists:categories,id'],
+            'category_ids.*' => ['required', 'exists:categories,id'],
         ];
     }
 }
