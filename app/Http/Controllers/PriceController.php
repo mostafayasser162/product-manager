@@ -17,42 +17,43 @@ class PriceController extends Controller
     {
         $data = $request->validated();
 
-        if ($this->priceService->hasConflict(
-            $product->id,
-            $data['start_date']
-        )) {
+        // Check if there's already a price for this period
+        if ($this->priceService->hasConflict($product->id, $data['start_date'])) {
             return response()->errors('There is already a price defined for this period.');
         }
 
+        // Create new price
         $price = $product->prices()->create($data);
+
         return response()->success(new PriceResource($price));
     }
 
     public function update(UpdatePriceRequest $request, $id)
     {
         $price = Price::find($id);
-        if (!$price) {
+
+        // Return error if price not found
+        if (! $price) {
             return response()->errors('Price not found');
         }
 
         $data = $request->validated();
 
-        if ($this->priceService->hasConflict(
-            $price->product_id,
-            $data['start_date'],
-            $price->id
-        )) {
+        // Check if updated start date causes a conflict with other prices
+        if ($this->priceService->hasConflict($price->product_id, $data['start_date'], $price->id)) {
             return response()->errors('Another price exists for this period.');
         }
 
-
+        // Update the price
         $price->update($data);
+
         return response()->success(new PriceResource($price));
     }
 
     public function destroy(Price $price)
     {
         $price->delete();
+
         return response()->success('Price deleted');
     }
 }

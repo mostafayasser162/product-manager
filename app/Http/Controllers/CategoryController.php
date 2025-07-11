@@ -14,18 +14,25 @@ class CategoryController extends Controller
      */
     public function index()
     {
+        // Get paginated list of categories
         $categories = Category::paginate();
+
+        // Transform categories using the resource
         $categories = CategoryResource::collection($categories);
+
         return response()->paginate_resource($categories);
     }
+
     /**
      * Store a newly created resource in storage.
      */
+
     public function store(StoreCategoryRequest $request)
     {
         $data = $request->validated();
 
         $category = Category::create($data);
+
         $category = new CategoryResource($category);
 
         return response()->success($category);
@@ -40,7 +47,9 @@ class CategoryController extends Controller
         if (!$category) {
             return response()->errors('Category not found');
         }
+
         $category = new CategoryResource($category);
+
         return response()->success($category);
     }
     /**
@@ -61,12 +70,17 @@ class CategoryController extends Controller
 
     public function destroy($id)
     {
+        // Find category by ID
         $category = Category::find($id);
-        if (!$category) {
+
+        // Return error if category not found
+        if (! $category) {
             return response()->errors('Category not found');
         }
 
+        // Delete the category
         $category->delete();
+
         return response()->success('Category deleted successfully');
     }
 }

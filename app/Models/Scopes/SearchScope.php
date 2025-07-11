@@ -13,25 +13,17 @@ class SearchScope implements Scope
      */
     public function apply(Builder $builder, Model $model): void
     {
+        $table = $builder->getModel()->getTable();
+        // dd ($table);
 
         $request = app('request');
 
         if (!$request->has('search')) {
             return;
         }
-        if (!auth()->check() && $request->bearerToken()) {
-            try {
-                auth()->authenticate();
-            } catch (\Exception $e) {
-                return;
-            }
-        }
+        $search = request()->search;
 
-        $search = $request->get('search');
-
-        $builder->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-                ->orWhere('id', 'like', "%{$search}%");
-        });
+        $builder->where("$table.name", 'like', '%' . $search . '%')
+            ->orWhere("$table.id", 'like', '%' . $search . '%');
     }
 }

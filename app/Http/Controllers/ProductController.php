@@ -6,9 +6,9 @@ use App\Models\Product;
 use App\Services\ImageService;
 use App\Services\ProductPriceService;
 use App\Http\Resources\ProductResource;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -21,14 +21,19 @@ class ProductController extends Controller
      */
     public function index()
     {
+        // Fetch paginated products with current price, categories, and price history
         $products = $this->priceService
             ->baseQueryWithCurrentPrice()
             ->with('categories', 'prices')
             ->paginate();
+
+        // Transform the products using the resource
         $products = ProductResource::collection($products);
 
+        // Return paginated response
         return response()->paginate_resource($products);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -36,20 +41,24 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         $data = $request->validated();
+        $categoryIds = $data['category_ids'] ?? [];
+        unset($data['category_ids']);
 
-        // image code
+        // Store the image and update the path in data
         $file = $data['image'];
         $path = 'storage/' . $file->store('images', 'public');
         $data['image'] = $path;
 
-        $categoryIds = $data['category_ids'] ?? [];
-        unset($data['category_ids']);
-
+        // Create the product and attach categories
         $product = Product::create($data);
-        if ($categoryIds) {
+
+        if (!empty($categoryIds)) {
             $product->categories()->sync($categoryIds);
         }
-        $product->load('categories', 'prices');
+
+        // Load relationships
+        $product->load(['categories', 'prices']);
+
         return response()->success($product);
     }
 
@@ -57,67 +66,110 @@ class ProductController extends Controller
      * Display the specified resource.
      */
     public function show($id)
-
     {
-        $product = $this->priceService->baseQueryWithCurrentPrice()
+        // Retrieve the product with current price using the custom price service
+        $product = $this->priceService
+            ->baseQueryWithCurrentPrice()
             ->find($id);
 
-        if (!$product) {
-            return response()->errors('product not found');
+        // Return error response if product not found
+        if (! $product) {
+            return response()->errors('Product not found');
         }
 
-        $product->load('categories');
-        $product = new ProductResource($product);
+        // Load related categories and prices
+        $product->load(['categories', 'prices']);
 
-        return response()->success($product);
+        return response()->success(new ProductResource($product));
     }
 
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateProductRequest $request, string $id)
+    // public function update(UpdateProductRequest $request, string $id)
+    // {
+    //     $product = Product::find($id);
+    //     if (! $product) {
+    //         return response()->errors('Product not found');
+    //     }
+
+    //     $data = $request->validated();
+    //     $categoryIds = $data['category_ids'] ?? null;
+    //     unset($data['category_ids']);
+
+    //     if (isset($data['image'])) {
+    //         $this->imageService->deleteProductImage($product->image);
+
+    //         $file = $data['image'];
+    //         $data['image'] = 'storage/' . $file->store('images', 'public');
+    //     }
+
+    //     $product->update($data);
+
+    //     if ($categoryIds) {
+    //         $product->categories()->sync($categoryIds);
+    //     }
+    //     $product->load('categories');
+    //     return response()->success(new ProductResource($product));
+    // }
+
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        $product = Product::find($id);
-        if (! $product) {
-            return response()->errors('Product not found');
-        }
+        $validatedData = $request->validated();
+        $categoryIds   = $validatedData['category_ids'] ?? [];
+        $newImageFile  = $validatedData['image'] ?? null;
 
-        $data = $request->validated();
-        $categoryIds = $data['category_ids'] ?? null;
-        unset($data['category_ids']);
+        // Remove non-column keys before update
+        unset($validatedData['category_ids'], $validatedData['image']);
 
-        if (isset($data['image'])) {
-            $this->imageService->deleteProductImage($product->image);
+        DB::transaction(function () use ($product, $validatedData, $categoryIds, $newImageFile) {
 
-            $file = $data['image'];
-            $data['image'] = 'storage/' . $file->store('images', 'public');
-        }
+            // Handle image upload and delete old one if needed
+            if ($newImageFile) {
+                // Upload new image
+                $newImagePath = $newImageFile->store('images', 'public');
+                $validatedData['image'] = 'storage/' . $newImagePath;
 
-        $product->update($data);
+                $this->imageService->deleteProductImage($product->image);
+            }
 
-        if ($categoryIds) {
-            $product->categories()->sync($categoryIds);
-        }
-        $product->load('categories');
-        return response()->success(new ProductResource($product));
+            // Update product data
+            $product->update($validatedData);
+
+            // Sync categories if provided
+            if (!empty($categoryIds)) {
+                $product->categories()->sync($categoryIds);
+            }
+        });
+
+        // Return updated product with categories
+        return response()->success(
+            new ProductResource($product->load('categories'))
+        );
     }
-
 
     /**
      * Remove the specified resource from storage.
      */
+
     public function destroy($id)
     {
         $product = Product::find($id);
 
-        if (!$product) {
+        if (! $product) {
             return response()->errors('Product not found');
         }
 
-        $this->imageService->deleteProductImage($product->image);
+        DB::transaction(function () use ($product) {
+            $imagePath = $product->image;
 
-        $product->delete();
+            // Delete product from database
+            $product->delete();
+
+            $this->imageService->deleteProductImage($imagePath);
+        });
+
         return response()->success('Product deleted successfully');
     }
 }

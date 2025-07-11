@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\SortScope;
+use App\Models\Scopes\SearchScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -23,5 +25,11 @@ class Product extends Model
     public function prices()
     {
         return $this->hasMany(Price::class);
+    }
+
+        protected static function booted(): void
+    {
+        static::addGlobalScope(new SortScope);
+        static::addGlobalScope(new SearchScope);
     }
 }
