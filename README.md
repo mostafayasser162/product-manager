@@ -21,6 +21,7 @@ It was built as part of a technical assessment task.
 -   PHP 8.2+
 -   Laravel 12+
 -   MySQL
+- Laravel Telescope (for local debugging)  
 -   Postman for testing the API
 
 ---

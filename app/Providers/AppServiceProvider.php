@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Response;
 use App\Mixins\ResponseMixin;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -12,7 +13,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        if ($this->app->isLocal()) {
+            $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);
+            $this->app->register(\App\Providers\TelescopeServiceProvider::class);
+        }
     }
 
     /**
