@@ -7,12 +7,13 @@ It was built as part of a technical assessment task.
 
 ## 🚀 Features
 
--   CRUD for Products & Categories
--   Many-to-Many relationship between products and categories
--   Assign multiple prices to each product based on time period
--   Get the current price of any product based on today's date
--   Clean code structure using Form Requests and API Resources
--   RESTful API with JSON responses
+-   RESTful JSON API
+-   CRUD operations for Products and Categories
+-   Many-to-Many relationship between Products and Categories
+-   Multiple prices per Product based on time periods
+-   Current price retrieval based on today's date
+-   Clean architecture using Form Requests, Services, and API Resources
+
 
 ---
 
@@ -31,7 +32,7 @@ It was built as part of a technical assessment task.
 ### 1. Clone the repository and install dependencies
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/product-manager.git
+git clone https://github.com/mostafayasser162/product-manager.git
 cd product-manager
 composer install
 ```
