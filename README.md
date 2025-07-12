@@ -1,7 +1,8 @@
 # Product Manager Task – Laravel Application
 
-This is a simple Laravel application for managing products, categories, and their prices over specific periods.  
-It was built as part of a technical assessment task.
+A Laravel-based API for managing products, categories, and time-based pricing.  
+Built as part of a backend developer technical assessment.
+
 
 ---
 
