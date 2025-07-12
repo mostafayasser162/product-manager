@@ -19,7 +19,7 @@ It was built as part of a technical assessment task.
 ## 🛠️ Tech Stack
 
 -   PHP 8.2+
--   Laravel 12+
+-   Laravel 12
 -   MySQL
 -   Laravel Telescope (for local debugging)
 -   Postman for testing the API
