@@ -33,8 +33,6 @@ class ProductController extends Controller
         // Return paginated response
         return response()->paginate_resource($products);
     }
-
-
     /**
      * Store a newly created resource in storage.
      */
@@ -59,7 +57,8 @@ class ProductController extends Controller
         // Load relationships
         $product->load(['categories', 'prices']);
 
-        return response()->success($product);
+        // Return success response with transformed product
+        return response()->success(new ProductResource($product));
     }
 
     /**
@@ -82,60 +81,31 @@ class ProductController extends Controller
 
         return response()->success(new ProductResource($product));
     }
-
-
     /**
      * Update the specified resource in storage.
      */
-    // public function update(UpdateProductRequest $request, string $id)
-    // {
-    //     $product = Product::find($id);
-    //     if (! $product) {
-    //         return response()->errors('Product not found');
-    //     }
-
-    //     $data = $request->validated();
-    //     $categoryIds = $data['category_ids'] ?? null;
-    //     unset($data['category_ids']);
-
-    //     if (isset($data['image'])) {
-    //         $this->imageService->deleteProductImage($product->image);
-
-    //         $file = $data['image'];
-    //         $data['image'] = 'storage/' . $file->store('images', 'public');
-    //     }
-
-    //     $product->update($data);
-
-    //     if ($categoryIds) {
-    //         $product->categories()->sync($categoryIds);
-    //     }
-    //     $product->load('categories');
-    //     return response()->success(new ProductResource($product));
-    // }
-
     public function update(UpdateProductRequest $request, Product $product)
     {
-        $validatedData = $request->validated();
-        $categoryIds   = $validatedData['category_ids'] ?? [];
-        $newImageFile  = $validatedData['image'] ?? null;
+        $data = $request->validated();
+        $categoryIds   = $data['category_ids'] ?? [];
+        $newImageFile  = $data['image'] ?? null;
 
         // Remove non-column keys before update
-        unset($validatedData['category_ids'], $validatedData['image']);
+        unset($data['category_ids'], $data['image']);
 
-        DB::transaction(function () use ($product, $validatedData, $categoryIds, $newImageFile) {
+        DB::transaction(function () use ($product, $data, $categoryIds, $newImageFile) {
 
             // Handle image upload and delete old one if needed
             if ($newImageFile) {
                 // Upload new image
                 $newImagePath = $newImageFile->store('images', 'public');
-                $validatedData['image'] = 'storage/' . $newImagePath;
+                $data['image'] = 'storage/' . $newImagePath;
 
                 $this->imageService->deleteProductImage($product->image);
             }
 
             // Update product data
-            $product->update($validatedData);
+            $product->update($data);
 
             // Sync categories if provided
             if (!empty($categoryIds)) {
@@ -143,10 +113,10 @@ class ProductController extends Controller
             }
         });
 
-        // Return updated product with categories
-        return response()->success(
-            new ProductResource($product->load('categories'))
-        );
+        // Load updated categories and return success response
+        $product->load('categories');
+
+        return response()->success(new ProductResource($product));
     }
 
     /**

@@ -33,9 +33,7 @@ class CategoryController extends Controller
 
         $category = Category::create($data);
 
-        $category = new CategoryResource($category);
-
-        return response()->success($category);
+        return response()->success(new CategoryResource($category));
     }
     /**
      * Display the specified resource.
@@ -48,9 +46,7 @@ class CategoryController extends Controller
             return response()->errors('Category not found');
         }
 
-        $category = new CategoryResource($category);
-
-        return response()->success($category);
+        return response()->success(new CategoryResource($category));
     }
     /**
      * Update the specified resource in storage.
